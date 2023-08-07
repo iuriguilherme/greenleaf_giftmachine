@@ -14,6 +14,24 @@ What this gift machine does is a self service gift receiving so people
 don't depend on waiting for an admin manually giving them the gift 
 through a game command.  
 
+## Instructions
+
+The file **GiftMachineObject.cs** shall be placed on directory 
+**EcoServer\Mods\UserCode\GiftMachine**.  
+
+In that same aforementioned directory you must create three text files 
+named respectively **supporters.G1.txt**, **supporters.G2.txt**, 
+**supporters.G1.txt**.  
+
+Those files should keep a list of player names exactly as they appear 
+in the game's chat. Example:  
+
+```
+Arend
+iggy
+Bob The Builder
+```
+
 ## Depdencies
 
 This mod depends on a custom mod using 
