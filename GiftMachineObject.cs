@@ -32,13 +32,17 @@ namespace Eco.Mods.TechTree
         // mantained by ecorcon, using dictionaries instead of lists
         private const string supportersG1File = "supporters.G1.txt";
         private const string supportersG2File = "supporters.G2.txt";
-        private const string supportersG3File = "supporters.G3.txt";        
+        private const string supportersG3File = "supporters.G3.txt";
+        private const string giftedFile = "gifted.txt";
         private List<string> supportersG1 = new List<string> {
             "Arend" };
         private List<string> supportersG2 = new List<string> {
             "Arend" };
         private List<string> supportersG3 = new List<string> {
             "Arend" };
+        private List<string> gifted = new List<string> {
+            "Arend" };
+        private StringBuilder print = new StringBuilder();
         
         public override InteractResult OnActInteract(
             InteractionContext context)
@@ -50,39 +54,83 @@ namespace Eco.Mods.TechTree
             bool matchG3 = false;
             bool matchG2 = false;
             bool matchG1 = false;
-            foreach(string supporter in supportersG3)
+            bool hasGift = false;
+            foreach(string supporter in gifted)
             {
                 if(supporter.Contains(userString))
                 {
-                    matchG3 = true;
+                    hasGift = true;
                 }
             }
-            foreach(string supporter in supportersG2)
+            if (! hasGift)
             {
-                if(supporter.Contains(userString))
+                foreach(string supporter in supportersG3)
                 {
-                    matchG2 = true;
+                    if(supporter.Contains(userString))
+                    {
+                        matchG3 = true;
+                    }
                 }
-            }
-            foreach(string supporter in supportersG1)
-            {
-                if(supporter.Contains(userString))
+                foreach(string supporter in supportersG2)
                 {
-                   matchG1 = true;
+                    if(supporter.Contains(userString))
+                    {
+                        matchG2 = true;
+                    }
                 }
-            }
-            if (matchG3)
+                foreach(string supporter in supportersG1)
+                {
+                    if(supporter.Contains(userString))
+                    {
+                       matchG1 = true;
+                    }
+                }
+                if (matchG3)
+                {
+                    CustomisableGiftBoxItem.GiveReward(user, userString,
+                        "G3");
+                    using(StreamWriter streamWriter = File.AppendText(
+                        storagePath + giftedFile))
+                    {
+                        streamWriter.WriteLine(userString);   
+                    }
+                } else if (matchG2)
+                {
+                    CustomisableGiftBoxItem.GiveReward(user, userString,
+                        "G2");
+                    using(StreamWriter streamWriter = File.AppendText(
+                        storagePath + giftedFile))
+                    {
+                        streamWriter.WriteLine(userString);   
+                    }
+                } else if (matchG1)
+                {
+                    CustomisableGiftBoxItem.GiveReward(user, userString,
+                        "G1");
+                    using(StreamWriter streamWriter = File.AppendText(
+                        storagePath + giftedFile))
+                    {
+                        streamWriter.WriteLine(userString);   
+                    }
+                } else
+                {
+                    print.Append("It seems you're not in the ");
+                    print.Append("supporters list. The donation ");
+                    print.Append("information is at discord on the ");
+                    print.Append("channel #donation_info. If you ");
+                    print.Append("think this is a mistake, ");
+                    print.Append("#BlameArend");
+                    player.InfoBox(Localizer.DoStr(print.ToString()));
+                    print.Clear();
+                }
+            } else
             {
-                CustomisableGiftBoxItem.GiveReward(user, userString,
-                    "G3");
-            } else if (matchG2)
-            {
-                CustomisableGiftBoxItem.GiveReward(user, userString,
-                    "G2");
-            } else if (matchG1)
-            {
-                CustomisableGiftBoxItem.GiveReward(user, userString,
-                    "G1");
+                print.Append("I think you've already received your ");
+                print.Append("gift box, please double check your ");
+                print.Append("inventory and backpack. If you're ");
+                print.Append("sure you don't have it, #BlameIggy");
+                player.InfoBox(Localizer.DoStr(print.ToString()));
+                print.Clear();
             }
             return InteractResult.Success;
         }
@@ -99,6 +147,9 @@ namespace Eco.Mods.TechTree
                     .ToList();
                 supportersG3 = System.IO.File
                     .ReadAllLines(storagePath + supportersG3File)
+                    .ToList();
+                gifted = System.IO.File
+                    .ReadAllLines(storagePath + giftedFile)
                     .ToList();
             } catch (Exception e)
             {
@@ -120,9 +171,10 @@ namespace Eco.Mods.TechTree
         {
             WorldObject.AddOccupancy<GiftMachineObject>(
                 new List<BlockOccupancy>(){
-            new BlockOccupancy(new Vector3i(0, 0, 0)),
-            new BlockOccupancy(new Vector3i(0, 1, 0)),
-            });
+                    new BlockOccupancy(new Vector3i(0, 0, 0)),
+                    new BlockOccupancy(new Vector3i(0, 1, 0))
+                }
+            );
         }
     }
 }
