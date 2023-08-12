@@ -12,6 +12,7 @@ using Eco.Gameplay.Components;
 using Eco.Gameplay.Interactions;
 using Eco.Gameplay.Items;
 using Eco.Gameplay.Objects;
+using Eco.Gameplay.Systems.Messaging.Chat.Commands;
 using Eco.Shared.Localization;
 using Eco.Shared.Math;
 using Eco.Shared.Serialization;
@@ -21,6 +22,7 @@ using ECO.EM.CustomRequests;
 namespace Eco.Mods.TechTree
 {
     [Serialized]
+    [ChatCommandHandler]
     public partial class GiftMachineObject : WorldObject
     {
         public override LocString DisplayName { get {
@@ -33,14 +35,14 @@ namespace Eco.Mods.TechTree
         private const string supportersG1File = "supporters.G1.txt";
         private const string supportersG2File = "supporters.G2.txt";
         private const string supportersG3File = "supporters.G3.txt";
-        private const string giftedFile = "gifted.txt";
+        private const string giftedSupportersFile = "giftedSupporters.txt";
         private List<string> supportersG1 = new List<string> {
             "Arend" };
         private List<string> supportersG2 = new List<string> {
             "Arend" };
         private List<string> supportersG3 = new List<string> {
             "Arend" };
-        private List<string> gifted = new List<string> {
+        private List<string> giftedSupporters = new List<string> {
             "Arend" };
         private StringBuilder print = new StringBuilder();
         
@@ -55,7 +57,7 @@ namespace Eco.Mods.TechTree
             bool matchG2 = false;
             bool matchG1 = false;
             bool hasGift = false;
-            foreach(string supporter in gifted)
+            foreach(string supporter in giftedSupporters)
             {
                 if(supporter.Contains(userString))
                 {
@@ -90,7 +92,7 @@ namespace Eco.Mods.TechTree
                     CustomisableGiftBoxItem.GiveReward(user, userString,
                         "G3");
                     using(StreamWriter streamWriter = File.AppendText(
-                        storagePath + giftedFile))
+                        storagePath + giftedSupportersFile))
                     {
                         streamWriter.WriteLine(userString);   
                     }
@@ -99,7 +101,7 @@ namespace Eco.Mods.TechTree
                     CustomisableGiftBoxItem.GiveReward(user, userString,
                         "G2");
                     using(StreamWriter streamWriter = File.AppendText(
-                        storagePath + giftedFile))
+                        storagePath + giftedSupportersFile))
                     {
                         streamWriter.WriteLine(userString);   
                     }
@@ -108,7 +110,7 @@ namespace Eco.Mods.TechTree
                     CustomisableGiftBoxItem.GiveReward(user, userString,
                         "G1");
                     using(StreamWriter streamWriter = File.AppendText(
-                        storagePath + giftedFile))
+                        storagePath + giftedSupportersFile))
                     {
                         streamWriter.WriteLine(userString);   
                     }
@@ -135,6 +137,114 @@ namespace Eco.Mods.TechTree
             return InteractResult.Success;
         }
         
+        [ChatSubCommand(
+            "Rewards",
+            "Lists All Supporters.",
+            "lsall",
+            ChatAuthorizationLevel.Admin
+        )]
+        public static void List(User user)
+        {
+            ListSupporters(user, "Level 1", supportersG1File);
+            ListSupporters(user, "Level 2", supportersG2File);
+            ListSupporters(user, "Level 3", supportersG3File);
+        }
+        [ChatSubCommand(
+            "Rewards",
+            "Lists Supporters. Parameter: level (1-3)",
+            "lslvl",
+            ChatAuthorizationLevel.Admin
+        )]
+        public static void List(User user, string level)
+        {
+            switch (level)
+            {
+                case "1":
+                    ListSupporters(user, "Level 1", supportersG1File);
+                    break;
+                case "2":
+                    ListSupporters(user, "Level 2", supportersG2File);
+                    break;
+                case "3":
+                    ListSupporters(user, "Level 3", supportersG3File);
+                    break;
+                default:
+                    StringBuilder print = new StringBuilder();
+                    print.Append("Level " + level + " doesn't exist.");
+                    user.Player.ErrorLocStr(print.ToString());
+                    print.Clear();
+                    break;
+            }
+        }
+        
+        private static void ListSupporters(
+            User user,
+            string level,
+            string supportersFile
+        )
+        {
+            StringBuilder print = new StringBuilder();
+            try
+            {
+                List<string> supporters = System.IO.File
+                    .ReadAllLines(storagePath + supportersFile)
+                    .ToList();
+                supporters.Sort();
+                List<string> gifteds = System.IO.File
+                    .ReadAllLines(storagePath + giftedSupportersFile)
+                    .ToList();
+                gifteds.Sort();
+                string defaultColor = "red";
+                string color = defaultColor;
+                print.Append("List of " + level + " Supporters:");
+                print.Append(Environment.NewLine);
+                print.Append("Colors meaning:");
+                print.Append(Environment.NewLine);
+                print.Append("<i>(<color=\"red\">");
+                print.Append("didn\'t join the server yet");
+                print.Append("</color>)</i>");
+                print.Append(Environment.NewLine);
+                print.Append("<i>(<color=\"yellow\">");
+                print.Append("didn\'t get the gift yet");
+                print.Append("</color></i>");
+                print.Append(Environment.NewLine);
+                print.Append("<i>(<color=\"green\">");
+                print.Append("already have the gift");
+                print.Append("</color></i>");
+                print.Append(Environment.NewLine);
+                print.Append(Environment.NewLine);
+                foreach(string supporter in supporters)
+                {
+                    foreach (User who in UserManager.Users)
+                    {
+                        if (who.Name.ToLower() == supporter.ToLower() && who.EnteredWorld)
+                        {
+                            color = "yellow";
+                            break;
+                        }
+                    }
+                    foreach(string gifted in gifteds)
+                    {
+                        if(gifted == supporter)
+                        {
+                            color = "green";
+                            break;
+                        }
+                    }
+                    print.Append("<color=\"" + color + "\">");
+                    print.Append(supporter);
+                    print.Append("</color>");
+                    print.Append(Environment.NewLine);
+                    color = defaultColor;
+                }
+                user.Player.MsgLocStr(print.ToString());
+            } catch (Exception e)
+            {
+                user.Player.ErrorLocStr(e.ToString());
+            }
+            print.Clear();
+        }
+        
         private void PopulateSupporters()
         {
             try
@@ -148,8 +258,8 @@ namespace Eco.Mods.TechTree
                 supportersG3 = System.IO.File
                     .ReadAllLines(storagePath + supportersG3File)
                     .ToList();
-                gifted = System.IO.File
-                    .ReadAllLines(storagePath + giftedFile)
+                giftedSupporters = System.IO.File
+                    .ReadAllLines(storagePath + giftedSupportersFile)
                     .ToList();
             } catch (Exception e)
             {
