@@ -28,14 +28,18 @@ namespace Eco.Mods.TechTree
         public override LocString DisplayName { get {
             return Localizer.DoStr("Gift Machine"); } }
         
-        private const string storagePath = 
-            "Mods\\UserCode\\GiftMachine\\";
+        private static string storagePath = Path.Combine("Mods",
+            "UserCode", "GiftMachine");
         // TODO: use a single csv file or database, generated and 
         // mantained by ecorcon, using dictionaries instead of lists
-        private const string supportersG1File = "supporters.G1.txt";
-        private const string supportersG2File = "supporters.G2.txt";
-        private const string supportersG3File = "supporters.G3.txt";
-        private const string giftedSupportersFile = "giftedSupporters.txt";
+        private static string supportersG1File = Path.Combine(
+            storagePath, "supporters.G1.txt");
+        private static string supportersG2File = Path.Combine(
+            storagePath, "supporters.G2.txt");
+        private static string supportersG3File = Path.Combine(
+            storagePath, "supporters.G3.txt");
+        private static string giftedSupportersFile = Path.Combine(
+            storagePath, "giftedSupporters.txt");
         private List<string> supportersG1 = new List<string> {
             "Arend" };
         private List<string> supportersG2 = new List<string> {
@@ -59,7 +63,7 @@ namespace Eco.Mods.TechTree
             bool hasGift = false;
             foreach(string supporter in giftedSupporters)
             {
-                if(supporter.Contains(userString))
+                if(supporter.ToLower() == userString.ToLower())
                 {
                     hasGift = true;
                 }
@@ -68,21 +72,21 @@ namespace Eco.Mods.TechTree
             {
                 foreach(string supporter in supportersG3)
                 {
-                    if(supporter.Contains(userString))
+                    if(supporter.ToLower() == userString.ToLower())
                     {
                         matchG3 = true;
                     }
                 }
                 foreach(string supporter in supportersG2)
                 {
-                    if(supporter.Contains(userString))
+                    if(supporter.ToLower() == userString.ToLower())
                     {
                         matchG2 = true;
                     }
                 }
                 foreach(string supporter in supportersG1)
                 {
-                    if(supporter.Contains(userString))
+                    if(supporter.ToLower() == userString.ToLower())
                     {
                        matchG1 = true;
                     }
@@ -140,19 +144,37 @@ namespace Eco.Mods.TechTree
         [ChatSubCommand(
             "Rewards",
             "Lists All Supporters.",
-            "lsall",
+            "lss",
             ChatAuthorizationLevel.Admin
         )]
         public static void List(User user)
         {
+            StringBuilder print = new StringBuilder();
+            print.Append("Meaning of the colors in names:");
+            print.Append(Environment.NewLine);
+            print.Append("  <i><color=\"red\">");
+            print.Append("Red: player didn\'t join the server yet.");
+            print.Append("</color></i>");
+            print.Append(Environment.NewLine);
+            print.Append("  <i><color=\"yellow\">");
+            print.Append("Yellow: player joined the server already, ");
+            print.Append("but didn\'t get the gift yet.");
+            print.Append("</color></i>");
+            print.Append(Environment.NewLine);
+            print.Append("  <i><color=\"green\">");
+            print.Append("Green: Player already got the gift.");
+            print.Append("</color></i>");
+            user.Player.MsgLocStr(print.ToString());
+            print.Clear();
             ListSupporters(user, "Level 1", supportersG1File);
             ListSupporters(user, "Level 2", supportersG2File);
             ListSupporters(user, "Level 3", supportersG3File);
         }
+        
         [ChatSubCommand(
             "Rewards",
             "Lists Supporters. Parameter: level (1-3)",
-            "lslvl",
+            "lsl",
             ChatAuthorizationLevel.Admin
         )]
         public static void List(User user, string level)
@@ -177,6 +199,222 @@ namespace Eco.Mods.TechTree
             }
         }
         
+        [ChatSubCommand(
+            "Rewards",
+            "Add Supporter to List. Parameters: player,level (1-3)",
+            "adds",
+            ChatAuthorizationLevel.Admin
+        )]
+        public static void Add(
+            User user,
+            string player,
+            string level
+        )
+        {
+            switch (level)
+            {
+                case "1":
+                    AddSupporterTo(user, player, level,
+                        supportersG1File);
+                    break;
+                case "2":
+                    AddSupporterTo(user, player, level,
+                        supportersG2File);
+                    break;
+                case "3":
+                    AddSupporterTo(user, player, level,
+                        supportersG3File);
+                    break;
+                default:
+                    StringBuilder print = new StringBuilder();
+                    print.Append("Level " + level + " doesn't exist.");
+                    user.Player.ErrorLocStr(print.ToString());
+                    print.Clear();
+                    break;
+            }
+        }
+        
+        [ChatSubCommand(
+            "Rewards",
+            "Removes Supporter from List. Parameters: player,level (1-3)",
+            "rms",
+            ChatAuthorizationLevel.Admin
+        )]
+        public static void Remove(
+            User user,
+            string player,
+            string level
+        )
+        {
+            switch (level)
+            {
+                case "1":
+                    RemoveSupporterFrom(user, player, level,
+                        supportersG1File);
+                    break;
+                case "2":
+                    RemoveSupporterFrom(user, player, level,
+                        supportersG2File);
+                    break;
+                case "3":
+                    RemoveSupporterFrom(user, player, level,
+                        supportersG3File);
+                    break;
+                default:
+                    StringBuilder print = new StringBuilder();
+                    print.Append("Level " + level + " doesn't exist.");
+                    user.Player.ErrorLocStr(print.ToString());
+                    print.Clear();
+                    break;
+            }
+        }
+        
+        [ChatSubCommand(
+            "Rewards",
+            "Mark player as already gifted",
+            "gifted",
+            ChatAuthorizationLevel.Admin
+        )]
+        public static void AddGifted(User user, string player)
+        {
+            StringBuilder print = new StringBuilder();
+            try
+            {
+                List<string> supporters = System.IO.File
+                    .ReadAllLines(giftedSupportersFile)
+                    .ToList();
+                supporters.Add(player);
+                supporters.Sort();
+                using(StreamWriter streamWriter = new StreamWriter(
+                        giftedSupportersFile))
+                {
+                    foreach (string supporter in supporters)
+                    {
+                        streamWriter.WriteLine(supporter);
+                    }
+                }
+                print.Append("User ");
+                print.Append(player);
+                print.Append(" added to list of supporters which ");
+                print.Append("already received the gift.");
+                user.Player.MsgLocStr(print.ToString());
+                print.Clear();
+            } catch (Exception e)
+            {
+                user.Player.ErrorLocStr(e.ToString());
+            }
+        }
+        
+        [ChatSubCommand(
+            "Rewards",
+            "Mark player as not yet gifted",
+            "ungifted",
+            ChatAuthorizationLevel.Admin
+        )]
+        public static void RemoveGifted(User user, string player)
+        {
+            StringBuilder print = new StringBuilder();
+            try
+            {
+                List<string> supporters = System.IO.File
+                    .ReadAllLines(giftedSupportersFile)
+                    .ToList();
+                supporters.Remove(player);
+                supporters.Sort();
+                using(StreamWriter streamWriter = new StreamWriter(
+                        giftedSupportersFile))
+                {
+                    foreach (string supporter in supporters)
+                    {
+                        streamWriter.WriteLine(supporter);
+                    }
+                }
+                print.Append("User ");
+                print.Append(player);
+                print.Append(" marked as supporter which did not yet ");
+                print.Append("received the gift.");
+                user.Player.MsgLocStr(print.ToString());
+                print.Clear();
+            } catch (Exception e)
+            {
+                user.Player.ErrorLocStr(e.ToString());
+            }
+        }
+        
+        private static void AddSupporterTo(
+            User user,
+            string player,
+            string level,
+            string supportersFile
+        )
+        {
+            StringBuilder print = new StringBuilder();
+            try
+            {
+                List<string> supporters = System.IO.File
+                    .ReadAllLines(supportersFile)
+                    .ToList();
+                supporters.Add(player);
+                supporters.Sort();
+                using(StreamWriter streamWriter = new StreamWriter(
+                        supportersFile))
+                {
+                    foreach (string supporter in supporters)
+                    {
+                        streamWriter.WriteLine(supporter);
+                    }
+                }
+                print.Append("User ");
+                print.Append(player);
+                print.Append(" added to list of supporters");
+                print.Append(" for level ");
+                print.Append(level);
+                print.Append(".");
+                user.Player.MsgLocStr(print.ToString());
+                print.Clear();
+            } catch (Exception e)
+            {
+                user.Player.ErrorLocStr(e.ToString());
+            }
+        }
+        
+        private static void RemoveSupporterFrom(
+            User user,
+            string player,
+            string level,
+            string supportersFile
+        )
+        {
+            StringBuilder print = new StringBuilder();
+            try
+            {
+                List<string> supporters = System.IO.File
+                    .ReadAllLines(supportersFile)
+                    .ToList();
+                supporters.Remove(player);
+                supporters.Sort();
+                using(StreamWriter streamWriter = new StreamWriter(
+                        supportersFile))
+                {
+                    foreach (string supporter in supporters)
+                    {
+                        streamWriter.WriteLine(supporter);
+                    }
+                }
+                print.Append("User ");
+                print.Append(player);
+                print.Append(" removed from list of supporters");
+                print.Append(" for level ");
+                print.Append(level);
+                print.Append(".");
+                user.Player.MsgLocStr(print.ToString());
+                print.Clear();
+            } catch (Exception e)
+            {
+                user.Player.ErrorLocStr(e.ToString());
+            }
+        }
+        
         private static void ListSupporters(
             User user,
             string level,
@@ -187,30 +425,16 @@ namespace Eco.Mods.TechTree
             try
             {
                 List<string> supporters = System.IO.File
-                    .ReadAllLines(storagePath + supportersFile)
+                    .ReadAllLines(supportersFile)
                     .ToList();
                 supporters.Sort();
                 List<string> gifteds = System.IO.File
-                    .ReadAllLines(storagePath + giftedSupportersFile)
+                    .ReadAllLines(giftedSupportersFile)
                     .ToList();
                 gifteds.Sort();
                 string defaultColor = "red";
                 string color = defaultColor;
                 print.Append("List of " + level + " Supporters:");
-                print.Append(Environment.NewLine);
-                print.Append("Colors meaning:");
-                print.Append(Environment.NewLine);
-                print.Append("<i>(<color=\"red\">");
-                print.Append("didn\'t join the server yet");
-                print.Append("</color>)</i>");
-                print.Append(Environment.NewLine);
-                print.Append("<i>(<color=\"yellow\">");
-                print.Append("didn\'t get the gift yet");
-                print.Append("</color></i>");
-                print.Append(Environment.NewLine);
-                print.Append("<i>(<color=\"green\">");
-                print.Append("already have the gift");
-                print.Append("</color></i>");
                 print.Append(Environment.NewLine);
                 print.Append(Environment.NewLine);
                 foreach(string supporter in supporters)
@@ -225,7 +449,7 @@ namespace Eco.Mods.TechTree
                     }
                     foreach(string gifted in gifteds)
                     {
-                        if(gifted == supporter)
+                        if(gifted.ToLower() == supporter.ToLower())
                         {
                             color = "green";
                             break;
@@ -250,16 +474,16 @@ namespace Eco.Mods.TechTree
             try
             {
                 supportersG1 = System.IO.File
-                    .ReadAllLines(storagePath + supportersG1File)
+                    .ReadAllLines(supportersG1File)
                     .ToList();
                 supportersG2 = System.IO.File
-                    .ReadAllLines(storagePath + supportersG2File)
+                    .ReadAllLines(supportersG2File)
                     .ToList();
                 supportersG3 = System.IO.File
-                    .ReadAllLines(storagePath + supportersG3File)
+                    .ReadAllLines(supportersG3File)
                     .ToList();
                 giftedSupporters = System.IO.File
-                    .ReadAllLines(storagePath + giftedSupportersFile)
+                    .ReadAllLines(giftedSupportersFile)
                     .ToList();
             } catch (Exception e)
             {
