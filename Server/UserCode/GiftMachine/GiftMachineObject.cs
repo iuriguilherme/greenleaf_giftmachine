@@ -28,10 +28,14 @@ namespace Eco.Mods.TechTree
         public override LocString DisplayName { get {
             return Localizer.DoStr("Gift Machine"); } }
         
-        private static string storagePath = Path.Combine("Mods",
-            "UserCode", "GiftMachine");
+        // Wasn't my idea to stuck the text files there
+        private static string storagePath = Path.Combine(
+            "Mods",
+            "UserCode",
+            "GiftMachine"
+        );
         // TODO: use a single csv file or database, generated and 
-        // mantained by ecorcon, using dictionaries instead of lists
+        // mantained by EcoSM, using dictionaries instead of lists
         private static string supportersG1File = Path.Combine(
             storagePath, "supporters.G1.txt");
         private static string supportersG2File = Path.Combine(
@@ -53,89 +57,119 @@ namespace Eco.Mods.TechTree
         public override InteractResult OnActInteract(
             InteractionContext context)
         {
-            var user = context.Player.User;
-            var player = context.Player;
-            string userString = player.ToString();
-            PopulateSupporters();
-            bool matchG3 = false;
-            bool matchG2 = false;
-            bool matchG1 = false;
-            bool hasGift = false;
-            foreach(string supporter in giftedSupporters)
-            {
-                if(supporter.ToLower() == userString.ToLower())
-                {
-                    hasGift = true;
-                }
-            }
-            if (! hasGift)
-            {
-                foreach(string supporter in supportersG3)
+            try {
+                var user = context.Player.User;
+                var player = context.Player;
+                string userString = player.ToString();
+                PopulateSupporters();
+                bool matchG3 = false;
+                bool matchG2 = false;
+                bool matchG1 = false;
+                bool hasGift = false;
+                foreach(string supporter in giftedSupporters)
                 {
                     if(supporter.ToLower() == userString.ToLower())
                     {
-                        matchG3 = true;
+                        hasGift = true;
                     }
                 }
-                foreach(string supporter in supportersG2)
+                if (! hasGift)
                 {
-                    if(supporter.ToLower() == userString.ToLower())
+                    foreach(string supporter in supportersG3)
                     {
-                        matchG2 = true;
+                        if(supporter.ToLower() == userString.ToLower())
+                        {
+                            matchG3 = true;
+                        }
                     }
-                }
-                foreach(string supporter in supportersG1)
-                {
-                    if(supporter.ToLower() == userString.ToLower())
+                    foreach(string supporter in supportersG2)
                     {
-                       matchG1 = true;
+                        if(supporter.ToLower() == userString.ToLower())
+                        {
+                            matchG2 = true;
+                        }
                     }
-                }
-                if (matchG3)
-                {
-                    CustomisableGiftBoxItem.GiveReward(user, userString,
-                        "G3");
-                    using(StreamWriter streamWriter = File.AppendText(
-                        storagePath + giftedSupportersFile))
+                    foreach(string supporter in supportersG1)
                     {
-                        streamWriter.WriteLine(userString);   
+                        if(supporter.ToLower() == userString.ToLower())
+                        {
+                           matchG1 = true;
+                        }
                     }
-                } else if (matchG2)
-                {
-                    CustomisableGiftBoxItem.GiveReward(user, userString,
-                        "G2");
-                    using(StreamWriter streamWriter = File.AppendText(
-                        storagePath + giftedSupportersFile))
+                    if (matchG3)
                     {
-                        streamWriter.WriteLine(userString);   
-                    }
-                } else if (matchG1)
-                {
-                    CustomisableGiftBoxItem.GiveReward(user, userString,
-                        "G1");
-                    using(StreamWriter streamWriter = File.AppendText(
-                        storagePath + giftedSupportersFile))
+                        CustomisableGiftBoxItem.ActuallyGiveReward(
+                            user,
+                            userString,
+                            "G3"
+                        );
+                        using(StreamWriter streamWriter = File.AppendText(
+                            giftedSupportersFile))
+                        {
+                            streamWriter.WriteLine(userString);   
+                        }
+                    } else if (matchG2)
                     {
-                        streamWriter.WriteLine(userString);   
+                        CustomisableGiftBoxItem.ActuallyGiveReward(
+                            user,
+                            userString,
+                            "G2"
+                        );
+                        using(StreamWriter streamWriter = File.AppendText(
+                            giftedSupportersFile))
+                        {
+                            streamWriter.WriteLine(userString);   
+                        }
+                    } else if (matchG1)
+                    {
+                        CustomisableGiftBoxItem.ActuallyGiveReward(
+                            user,
+                            userString,
+                            "G1"
+                        );
+                        using(StreamWriter streamWriter = File.AppendText(
+                            giftedSupportersFile))
+                        {
+                            streamWriter.WriteLine(userString);   
+                        }
+                    } else
+                    {
+                        print.Append("It seems you're not in the ");
+                        print.Append("supporters list. The donation ");
+                        print.Append("information is at discord on ");
+                        print.Append("the channel #donation_info. If ");
+                        print.Append("you think this is a mistake, ");
+                        print.Append("#BlameArend");
+                        player.InfoBox(
+                            Localizer.DoStr(print.ToString()));
+                        print.Clear();
                     }
                 } else
                 {
-                    print.Append("It seems you're not in the ");
-                    print.Append("supporters list. The donation ");
-                    print.Append("information is at discord on the ");
-                    print.Append("channel #donation_info. If you ");
-                    print.Append("think this is a mistake, ");
-                    print.Append("#BlameArend");
+                    print.Append("I think you've already received ");
+                    print.Append("your gift box, please double check ");
+                    print.Append("your inventory and backpack. If ");
+                    print.Append("you're sure you don't have it, ");
+                    print.Append("#BlameIggy");
                     player.InfoBox(Localizer.DoStr(print.ToString()));
                     print.Clear();
                 }
-            } else
+            } catch (Exception e)
             {
-                print.Append("I think you've already received your ");
-                print.Append("gift box, please double check your ");
-                print.Append("inventory and backpack. If you're ");
-                print.Append("sure you don't have it, #BlameIggy");
-                player.InfoBox(Localizer.DoStr(print.ToString()));
+                print.Append("iggy made a terrible mistake, ");
+                print.Append("the mod is not working because of that.");
+                print.Append(Environment.NewLine);
+                print.Append("If you can show this error in the ");
+                print.Append("Greenleaf discord server, we an I ");
+                print.Append("can attempt to fix it ");
+                print.Append("(and probably introduce a new bug):");
+                print.Append(Environment.NewLine);
+                print.Append(e.ToString());
+                context.Player.LargeInfoBox(
+                    "Fatal Error",
+                    Localizer.DoStr(print.ToString()),
+                    "#BlameIggy"
+                );
                 print.Clear();
             }
             return InteractResult.Success;

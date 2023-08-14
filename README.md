@@ -32,7 +32,7 @@ iggy
 Bob The Builder
 ```
 
-## Depdencies
+## Depedencies
 
 This mod depends on a custom mod using 
 [Elixr Mods](https://github.com/TheKye/elixr-mods) which I'm not sure 
@@ -43,7 +43,7 @@ namespace ECO.EM.CustomRequests
 {
     public partial class CustomisableGiftBoxItem : Item
     {
-        public static void GiveReward(
+        public static void ActuallyGiveReward(
             Eco.Gameplay.Players.User user,
             string player,
             string giftBox
@@ -51,3 +51,15 @@ namespace ECO.EM.CustomRequests
     }
 }
 ```
+
+Where:
+
+- **user** is the User interacting with the Gift Machine;  
+- **player** is a User.Name, meaning the username of the player which 
+should receive the gift;  
+- **gitfBox** is a key that defines which gift to receive. The ones 
+defined in Greenleaf server are "G1", "G2" and "G3" for reference.  
+
+If you don't have that file in your mods folder, you can write a 
+function with that signature which will do whatever action you consider 
+a gift.  
