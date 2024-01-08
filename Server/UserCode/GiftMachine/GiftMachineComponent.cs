@@ -48,9 +48,11 @@ namespace Eco.Gameplay.Components
          */
         // Wasn't my idea to stuck the text files there
         private static string storagePath = Path.Combine(
-            "Mods",
-            "UserCode",
-            "GiftMachine"
+            //~ "Mods",
+            //~ "UserCode",
+            //~ "GiftMachine"
+            "..",
+            "Supporters"
         );
         // TODO: use a single csv file or database, generated and 
         // mantained by EcoSM, using dictionaries instead of lists
@@ -61,7 +63,11 @@ namespace Eco.Gameplay.Components
         private static string supportersG3File = Path.Combine(
             storagePath, "supporters.G3.txt");
         private static string giftedSupportersFile = Path.Combine(
-            storagePath, "giftedSupporters.txt");
+            "Mods",
+            "UserCode",
+            "GiftMachine",
+            "giftedSupporters.txt"
+        );
         
         private List<string> supportersG1 = new List<string> {
             "Arend" };
