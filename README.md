@@ -14,14 +14,37 @@ What this gift machine does is a self service gift receiving so people
 don't depend on waiting for an admin manually giving them the gift 
 through a game command.  
 
+The asset used for this mod in the Greenleaf server is made by Barometz 
+and it's not included in this repository. Ditto for the gift box icon.  
+
+The code used in Greenleaf server which defines the gift boxes, what 
+they have inside, the messages on the screen and all related code is 
+made by Kye from Elixr Mods and it's not in this repository.  
+
+You may use this code with your own assets and defined gifts. Make sure 
+you read the LICENSE file and keep modifications open sourced.  
+
 ## Instructions
 
-The file **GiftMachineObject.cs** shall be placed on directory 
-**EcoServer\Mods\UserCode\GiftMachine**.  
+The files **GiftMachineObject.cs** and **GiftMachineComponent.cs** 
+shall be placed on directory 
+**Server\Mods\UserCode\GiftMachine** where **EcoServer.exe** resides in
+**Server\EcoServer.exe**, for example:  
 
-In that same aforementioned directory you must create three text files 
-named respectively **supporters.G1.txt**, **supporters.G2.txt**, 
-**supporters.G1.txt**.  
+```
+C:\Eco\Server\EcoServer.exe
+C:\Eco\Server\Mods\UserCode\GiftMachine\GiftMachineObject.cs
+```
+
+In one parent directory from the aforementioned directory you must 
+create three text files named respectively **supporters.G1.txt**, 
+**supporters.G2.txt**, **supporters.G1.txt**. Using the above example:  
+
+```
+C:\Eco\Server\EcoServer.exe
+C:\Eco\Server\Mods\UserCode\GiftMachine\GiftMachineObject.cs
+C:\Eco\Supporters\supporters.G1.txt
+```
 
 Those files should keep a list of player names exactly as they appear 
 in the game's chat. Example:  
@@ -31,6 +54,9 @@ Arend
 iggy
 Bob The Builder
 ```
+
+Player names are case **in**sensitive, meaning Iggy, IGGY and iggy are 
+the same player.  
 
 ## Depedencies
 
