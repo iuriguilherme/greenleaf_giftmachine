@@ -1,5 +1,5 @@
 /*
- * Greenleaf Gift Machine by iggy
+ * Greenleaf Gift Machine v0.5.0 by iggy
  * Contributors: Barometz and Living Eccles from Greenleaf, Kye
  * Source code at
  *  https://github.com/iuriguilherme/greenleaf_giftmachine
@@ -18,11 +18,9 @@ namespace Eco.Gameplay.Components
     using Eco.Core.Controller;
     using Eco.Core.Items;
     using Eco.Core.Plugins.Interfaces;
-    //~ using Eco.Core.Serialization.Internal;
     using Eco.Core.Utils;
     using Eco.Gameplay.Players;
     using Eco.Gameplay.Components;
-    //~ using Eco.Gameplay.Interactions;
     using Eco.Gameplay.Interactions.Interactors;
     using Eco.Gameplay.Items;
     using Eco.Gameplay.Objects;
@@ -39,8 +37,10 @@ namespace Eco.Gameplay.Components
     [Serialized]
     [ChatCommandHandler]
     [HasIcon]
-    //~ [NoIcon]
     [LocDisplayName("Gift Machine")]
+    [LocDescription("Get your supporter gift!")]
+    [Tag("Economy")]
+    [Ecopedia]
     public class GiftMachineComponent : WorldObjectComponent
     {
         /*
@@ -83,25 +83,12 @@ namespace Eco.Gameplay.Components
         
         private static StringBuilder print = new StringBuilder();
         
-        /*
-         * WorldObjectComponent UI
-         */ 
-        //~ [SyncToView, Autogen, AutoRPC] public void nothing    
-        
-        // TODO: Use trigger: InteractionTrigger.InteractKey
-        [Interaction(
-          InteractionTrigger.LeftClick,
-          "Left Click to get gift, do NOT press E",
-          priority: -1
-        )]
-        public void GetGiftInteraction(
-          Player player,
-          InteractionTriggerInfo trigger,
-          InteractionTarget target
-        )
-        {
-            GetGift(player);
-        }
+        [Interaction(InteractionTrigger.InteractKey, "Get My Gift")]
+        public void GetMyGiftInteraction(
+            Player player,
+            InteractionTriggerInfo trigger,
+            InteractionTarget target
+        ) => this.GetGift(player);
         
         [ChatSubCommand(
             "Rewards",
@@ -229,12 +216,13 @@ namespace Eco.Gameplay.Components
                 List<string> supporters = System.IO.File
                     .ReadAllLines(giftedSupportersFile)
                     .ToList();
+                supporters.Remove("");
                 supporters.Add(player);
                 supporters.Sort();
                 using(StreamWriter streamWriter = new StreamWriter(
                         giftedSupportersFile))
                 {
-                    foreach (string supporter in supporters)
+                    foreach (string supporter in supporters.Distinct())
                     {
                         streamWriter.WriteLine(supporter);
                     }
@@ -449,6 +437,7 @@ namespace Eco.Gameplay.Components
                     if(supporter.ToLower() == userString.ToLower())
                     {
                         hasGift = true;
+                        break;
                     }
                 }
                 if (! hasGift)
@@ -458,69 +447,46 @@ namespace Eco.Gameplay.Components
                         if(supporter.ToLower() == userString.ToLower())
                         {
                             matchG3 = true;
+                            break;
                         }
                     }
-                    foreach(string supporter in supportersG2)
+                    if (! matchG3)
                     {
-                        if(supporter.ToLower() == userString.ToLower())
+                        foreach(string supporter in supportersG2)
                         {
-                            matchG2 = true;
+                            if(supporter.ToLower() == userString.ToLower())
+                            {
+                                matchG2 = true;
+                                break;
+                            }
+                        }
+                        if (! matchG2)
+                        {
+                            foreach(string supporter in supportersG1)
+                            {
+                                if(supporter.ToLower() == userString.ToLower())
+                                {
+                                   matchG1 = true;
+                                   break;
+                                }
+                            }
+                            if (! matchG1)
+                            {
+                                PrintNotSupporter(player);
+                            } else
+                            {
+                                GiveGift(user, userString, "G1");
+                            }
+                        }
+                        else
+                        {
+                            GiveGift(user, userString, "G2");
                         }
                     }
-                    foreach(string supporter in supportersG1)
+                    else
                     {
-                        if(supporter.ToLower() == userString.ToLower())
-                        {
-                           matchG1 = true;
-                        }
-                    }
-                    
-                    if (matchG3)
-                    {
-                        CustomisableGiftBoxItem.ActuallyGiveReward(
-                            user,
-                            userString,
-                            "G3"
-                        );
-                        using(
-                            StreamWriter streamWriter = File.AppendText(
-                            giftedSupportersFile)
-                        )
-                        {
-                            streamWriter.WriteLine(userString);   
-                        }
-                    } else if (matchG2)
-                    {
-                        CustomisableGiftBoxItem.ActuallyGiveReward(
-                            user,
-                            userString,
-                            "G2"
-                        );
-                        using(
-                            StreamWriter streamWriter = File.AppendText(
-                            giftedSupportersFile)
-                        )
-                        {
-                            streamWriter.WriteLine(userString);   
-                        }
-                    } else if (matchG1)
-                    {
-                        CustomisableGiftBoxItem.ActuallyGiveReward(
-                            user,
-                            userString,
-                            "G1"
-                        );
-                        using(
-                            StreamWriter streamWriter = File.AppendText(
-                            giftedSupportersFile)
-                        )
-                        {
-                            streamWriter.WriteLine(userString);   
-                        }
-                    } else
-                    {
-                        PrintNotSupporter(player);
-                    }
+                        GiveGift(user, userString, "G3");
+                    } 
                 } else
                 {
                     PrintAlreadyGifted(player);
@@ -529,6 +495,19 @@ namespace Eco.Gameplay.Components
             {
                 Croak(player, e);
             }
+        }
+        
+        private static void GiveGift(
+            User user,
+            string userString,
+            string gift
+        )
+        {
+            CustomisableGiftBoxItem.ActuallyGiveReward(
+                user,
+                userString,
+                gift
+            );
         }
         
         private static void PrintNotSupporter(Player player)
