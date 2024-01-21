@@ -1,5 +1,5 @@
 /*
- * Greenleaf Gift Machine v0.5.0 by iggy
+ * Greenleaf Gift Machine v0.6.0 by iggy
  * Contributors: Barometz and Living Eccles from Greenleaf, Kye
  * Source code at
  *  https://github.com/iuriguilherme/greenleaf_giftmachine
@@ -26,6 +26,7 @@ namespace Eco.Gameplay.Components
     using Eco.Gameplay.Objects;
     using Eco.Gameplay.Occupancy;
     using Eco.Gameplay.Systems.Messaging.Chat.Commands;
+    using Eco.Shared.Items;
     using Eco.Shared.Localization;
     using Eco.Shared.Math;
     using Eco.Shared.Networking;
@@ -83,7 +84,13 @@ namespace Eco.Gameplay.Components
         
         private static StringBuilder print = new StringBuilder();
         
-        [Interaction(InteractionTrigger.InteractKey, "Get My Gift")]
+        [
+            Interaction(
+                InteractionTrigger.InteractKey,
+                "Get My Gift!",
+                authRequired: AccessType.None
+            )
+        ]
         public void GetMyGiftInteraction(
             Player player,
             InteractionTriggerInfo trigger,

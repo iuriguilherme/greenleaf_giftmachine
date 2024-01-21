@@ -1,5 +1,5 @@
 /*
-* Greenleaf Gift Machine v0.5.0 by iggy
+* Greenleaf Gift Machine v0.6.0 by iggy
 * Contributors: Barometz and Living Eccles from Greenleaf, Kye
  * Source code at
  *  https://github.com/iuriguilherme/greenleaf_giftmachine
@@ -35,7 +35,6 @@ namespace Eco.Mods.TechTree
     using Eco.Shared.Utils;
     using ECO.EM.CustomRequests;
     using Eco.Gameplay.Systems.NewTooltip;
-    using static Eco.Gameplay.Components.OnOffComponent;
     
     [Serialized]
     // FIXME whereis CategoryAttribute
@@ -45,7 +44,6 @@ namespace Eco.Mods.TechTree
         "Get your supporter gift with this automated machine."
     )]
     [IconGroup("World Object Minimap")]
-    [Ecopedia("Work Stations", "Economic", createAsSubPage: true)]
     [Weight(2000)]
     public partial class GiftMachineItem : 
         WorldObjectItem<GiftMachineObject>, IPersistentData
@@ -66,23 +64,24 @@ namespace Eco.Mods.TechTree
     }
     
     [Serialized]
-    [RequireComponent(typeof(GiftMachineComponent))]
     [RequireComponent(typeof(MinimapComponent))]
-    [RequireComponent(typeof(OnOffComponent))]
+    [RequireComponent(typeof(GiftMachineComponent))]
     [Tag("Usable")]
-    public class GiftMachineObject : WorldObject, IRepresentsItem
+    public partial class GiftMachineObject : WorldObject, IRepresentsItem
     {
         public virtual Type RepresentedItemType => typeof(
             GiftMachineItem);
         public override LocString DisplayName => Localizer.DoStr(
             "Gift Machine");
         public override TableTextureMode TableTexture => 
-            TableTextureMode.Wood;
+            TableTextureMode.Metal;
         
         protected override void Initialize()
         {
+            this.ModsPreInitialize();
             this.GetComponent<MinimapComponent>().SetCategory(
                 Localizer.DoStr("Economy"));
+            this.ModsPostInitialize();
         }
         
         static GiftMachineObject()
@@ -94,5 +93,8 @@ namespace Eco.Mods.TechTree
                 }
             );
         }
+        
+        partial void ModsPreInitialize();
+        partial void ModsPostInitialize();
     }
 }
